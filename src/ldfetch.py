@@ -43,12 +43,33 @@ def parse_arguments(arguments):
                         help="sleep (seconds) between requests")
     parser.add_argument('-o', '--outfile', help="Output file",
                         default=sys.stdout, type=argparse.FileType('w'))
-    return parser.parse_args(arguments)
+    args = parser.parse_args(arguments)
+    #print(args)
+    
+    # Sanity check arguments:
+    # ... check vocabulary
+    vocab = args.vocabulary[0]
+    #print('vocab: ' + vocab)
+    if vocab not in ld_sources:
+        tmpl = "Unuspported vocabulary {vocab}; supported vocabularies are: {vocab_list}"
+        msg = tmpl.format(vocab=vocab, vocab_list=', '.join(iter(ld_sources.keys())))
+        parser.exit(msg)
+    # ... check format
+    format = args.format[0]
+    format_list = ld_sources[vocab].formats
+    if format not in format_list:
+        tmpl = "Format {format} not available for {vocabulary}, available formats are: {formats}"
+        msg = tmpl.format(format=format, vocabulary=vocab,
+                          formats=', '.join(iter(ld_sources[vocab].formats)))
+        parser.exit(msg)
+        
+    return args
 
 def main(arguments):
-    args = parse_arguments(arguments)
-    print(args)
+    global ld_sources
 
+    args = parse_arguments(arguments)
+    #print(args)
     id_iterator = args.id
     if len(id_iterator) == 0:
         id_iterator = sys.stdin
@@ -58,11 +79,6 @@ def main(arguments):
         print(id)
         if args.pause > 0:
             time.sleep(args.pause)
-        
-    
-        
-    # DO SOMETHING
-
-            
+                    
 if __name__ == '__main__':
     sys.exit(main(sys.argv[1:]))
